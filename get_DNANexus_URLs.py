@@ -2,7 +2,7 @@ import os
 import subprocess
 import dxpy
 import pandas as pd
-from key import token
+from DNAnexus_auth_token import token
 import re
 
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
@@ -21,7 +21,7 @@ def download_url(file_ID, project_ID):
 def find_data(filename):
     data = list(
         dxpy.bindings.search.find_data_objects(
-            name=filename, name_mode="glob", describe=True, created_after="-1w"
+            name=filename, name_mode="glob", describe=True, created_after="-12w"
         )
     )
     return data
