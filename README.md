@@ -3,7 +3,7 @@
 
 Clinical Scietists reported that they could not view the mappped files in the IGV browser easily. 
 
-Therefore, get_DNAnexus_URLs was written speed up the process
+Therefore, get_DNAnexus_URLs was created to speed up the process
 
 This code is written to generate .csv containing URLs for index and BAM files located on the DNAnexus for use in the IGV browser. 
 
