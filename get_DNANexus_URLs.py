@@ -21,7 +21,7 @@ def download_url(file_ID, project_ID):
 def find_data(filename):
     data = list(
         dxpy.bindings.search.find_data_objects(
-            name=filename, name_mode="glob", describe=True, created_after="-12w"
+            name=filename, name_mode="glob", describe=True, created_after="-1w"
         )
     )
     return data
