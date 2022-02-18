@@ -9,7 +9,7 @@ This code is written to generate .csv containing URLs for index and BAM files lo
 
 The code is to be run every day to refresh the .csv file with udate information
 
-The URLs are generated for files created within the last 12 weeks (3 months). This length can be easily modified within the script. 
+The URLs are generated for files created within the last 1 week. This length can be easily modified within the script. 
 
 
 Author: Igor Malashchuk, STP in Clinical Boinformatics at Guys and St Thomas's NHS Foundation Trust
