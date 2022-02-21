@@ -73,7 +73,7 @@ def final_url_links(merged_df):
     index_id = merged_df["index_file_id"][0]
     project_id = merged_df["project_id"][0]
     project_data = dxpy.bindings.dxproject.DXProject(dxid=project_id)
-    merged_df["project_name"] = project_data.describe().get("name")
+    merged_df["project_name"][0] = project_data.describe().get("name")
     bai_name = merged_df["name"][0]
     pattern = re.compile(r"(\S+.bam)")
     pattern_search = pattern.search(bai_name)
