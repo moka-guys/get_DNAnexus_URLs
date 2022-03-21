@@ -108,17 +108,18 @@ def final_url_links(merged_df):
     return merged_df.sort_values(["name", "folder"])
 
 
-# Retrieve infomration for BAM files
-all_BAM = find_data("*.bam")
-all_BAM_df = create_BAM_df(all_BAM)
-
-# Retrieve information for index files
-all_BAI = find_data("*.bam.bai")
-all_BAI_df = create_BAI_df(all_BAI)
-
-# merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
-merged = pd.merge(all_BAM_df, all_BAI_df, on=["name", "folder", "project_id"])
-
-# generate the url links and project name
-url_links = final_url_links(merged)
-url_links.to_csv(sys.argv[1], index=False, sep=",")
+if __name__=="__main__":
+    # Retrieve infomration for BAM files
+    all_BAM = find_data("*.bam")
+    all_BAM_df = create_BAM_df(all_BAM)
+    
+    # Retrieve information for index files
+    all_BAI = find_data("*.bam.bai")
+    all_BAI_df = create_BAI_df(all_BAI)
+    
+    # merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
+    merged = pd.merge(all_BAM_df, all_BAI_df, on=["name", "folder", "project_id"])
+    
+    # generate the url links and project name
+    url_links = final_url_links(merged)
+    url_links.to_csv(sys.argv[1], index=False, sep=",")
