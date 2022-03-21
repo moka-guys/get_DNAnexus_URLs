@@ -4,6 +4,7 @@ import dxpy
 import pandas as pd
 from DNAnexus_auth_token import token
 import re
+import sys
 
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 
@@ -17,6 +18,7 @@ def download_url(file_ID, project_ID):
     )
     return download_link[0]
 
+
 # find data based on the name of the file
 def find_data(filename):
     data = list(
@@ -26,12 +28,14 @@ def find_data(filename):
     )
     return data
 
+
 # find project name using unique project id
 def find_project_name(project_id):
     project_data = dxpy.bindings.dxproject.DXProject(dxid=project_id)
     return project_data.describe().get("name")
 
-#This function generates a dataframe containing the modified names of BAM files (in Index format) including unique object ids and project id
+
+# This function generates a dataframe containing the modified names of BAM files (in Index format) including unique object ids and project id
 def create_BAM_df(BAM_Data):
     data = []
     for object in BAM_Data:
@@ -54,6 +58,7 @@ def create_BAM_df(BAM_Data):
         data, columns=["name", "folder", "pan_num", "project_id", "bam_file_id"]
     )
 
+
 # generate a dataframe containing the names of Index files including unique object ids and project id
 def create_BAI_df(Index_Data):
     data = []
@@ -66,7 +71,8 @@ def create_BAI_df(Index_Data):
         data.append(merged_data)
     return pd.DataFrame(data, columns=["name", "folder", "project_id", "index_file_id"])
 
-# This function produces a dataframe with the URLs for BAM and Index files and 
+
+# This function produces a dataframe with the URLs for BAM and Index files and
 def final_url_links(merged_df):
     merged_df = merged_df.sort_values("project_id")
     # create new columns with url links and project name
@@ -115,4 +121,4 @@ merged = pd.merge(all_BAM_df, all_BAI_df, on=["name", "folder", "project_id"])
 
 # generate the url links and project name
 url_links = final_url_links(merged)
-url_links.to_csv("hg19_dnanexus.csv", index=False, sep=",")
+url_links.to_csv(sys.argv[1], index=False, sep=",")
