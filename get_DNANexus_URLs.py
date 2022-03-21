@@ -6,6 +6,11 @@ from DNAnexus_auth_token import token
 import re
 import sys
 
+'''
+Running this script: 
+python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
+'''
+
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 
 # generate download link for DNAnexus object
@@ -20,10 +25,10 @@ def download_url(file_ID, project_ID):
 
 
 # find data based on the name of the file
-def find_data(filename):
+def find_data(filename, length):
     data = list(
         dxpy.bindings.search.find_data_objects(
-            name=filename, name_mode="glob", describe=True, created_after="-1w"
+            name=filename, name_mode="glob", describe=True, created_after=length
         )
     )
     return data
@@ -110,11 +115,13 @@ def final_url_links(merged_df):
 
 if __name__=="__main__":
     # Retrieve infomration for BAM files
-    all_BAM = find_data("*.bam")
+    length = sys.argv[1] # e.g. argument '-12w' = search DNAnexus for the previous 12 weeks from now
+
+    all_BAM = find_data("*.bam", length)
     all_BAM_df = create_BAM_df(all_BAM)
     
     # Retrieve information for index files
-    all_BAI = find_data("*.bam.bai")
+    all_BAI = find_data("*.bam.bai", length)
     all_BAI_df = create_BAI_df(all_BAI)
     
     # merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
@@ -122,4 +129,4 @@ if __name__=="__main__":
     
     # generate the url links and project name
     url_links = final_url_links(merged)
-    url_links.to_csv(sys.argv[1], index=False, sep=",")
+    url_links.to_csv(sys.argv[2], index=False, sep=",")

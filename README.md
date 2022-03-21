@@ -13,5 +13,22 @@ The URLs are generated for files created within the last 1 week. This length can
 
 The URL links are active for 23 hours.
 
-Author: Igor Malashchuk, STP in Clinical Boinformatics at Guys and St Thomas's NHS Foundation Trust
-18th Feb 2022 
+## Running the script
+
+Run this script in python 3. 
+
+python script_name length output_name
+
+### Example:
+
+python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
+
+-12w = 12 weeks from now
+hg19_dnanexus.csv = output file name
+
+
+## Author
+Igor Malashchuk, 
+STP in Clinical Boinformatics
+Guys and St Thomas's NHS Foundation Trust
+Updated: 21st March 2022 
