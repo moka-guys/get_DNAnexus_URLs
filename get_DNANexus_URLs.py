@@ -79,6 +79,13 @@ def create_BAI_df(Index_Data):
 
 # This function produces a dataframe with the URLs for BAM and Index files and
 def final_url_links(merged_df):
+    
+    toolbar_width = len(merged_df)
+    sys.stdout.write("[%s]" % (" " * toolbar_width))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+    sys.stdout.flush()
+
     merged_df = merged_df.sort_values("project_id")
     # create new columns with url links and project name
     merged_df["project_name"] = ""
@@ -96,6 +103,8 @@ def final_url_links(merged_df):
     merged_df["url"][0] = download_url(bam_id, project_id) + "/" + bam_name
     merged_df["indexURL"][0] = download_url(index_id, project_id) + "/" + bai_name
     # loop to fill the rest of the rows with the required data
+    sys.stdout.write("{} ".format(1))
+    sys.stdout.flush()
     for i in range(1, len(merged_df)):
         bai_name = merged_df["name"][i]
         pattern_search = pattern.search(bai_name)
@@ -110,23 +119,38 @@ def final_url_links(merged_df):
             merged_df["project_name"][i] = find_project_name(project_id)
         merged_df["url"][i] = download_url(bam_id, project_id) + "/" + bam_name
         merged_df["indexURL"][i] = download_url(index_id, project_id) + "/" + bai_name
+        #Show progress bar
+        sys.stdout.write("{} ".format(i+1))
+        sys.stdout.flush()
+    sys.stdout.write("]\n")
     return merged_df.sort_values(["name", "folder"])
 
 
 if __name__=="__main__":
-    # Retrieve infomration for BAM files
+    
     length = sys.argv[1] # e.g. argument '-12w' = search DNAnexus for the previous 12 weeks from now
-
+    
+    # Retrieve infomration for BAM files
+    print("Searching for BAM files...")
     all_BAM = find_data("*.bam", length)
     all_BAM_df = create_BAM_df(all_BAM)
     
+   
     # Retrieve information for index files
+    print("Searching for BAM Index files...")
     all_BAI = find_data("*.bam.bai", length)
     all_BAI_df = create_BAI_df(all_BAI)
     
     # merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
+    print("Merging BAM and BAM Index files...")
     merged = pd.merge(all_BAM_df, all_BAI_df, on=["name", "folder", "project_id"])
     
-    # generate the url links and project name
-    url_links = final_url_links(merged)
-    url_links.to_csv(sys.argv[2], index=False, sep=",")
+    if len(merged) > 0:
+        # generate the url links and project name
+        print("{} for {} BAM and BAM Index files:".format("Generating URL links", len(merged)))
+        url_links = final_url_links(merged)
+        url_links.to_csv(sys.argv[2], index=False, sep=",")
+        print("csv file with URL links created successfully")
+    else:
+        print("No matching BAM and BAM Index files were found within the time frame specified: {}".format(length))
+        
