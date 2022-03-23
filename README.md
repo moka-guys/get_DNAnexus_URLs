@@ -24,7 +24,7 @@ python script\_name length output\_name
 python3 path/get\_DNANexus\_URLs.py -12w path/hg19z_dnanexus.csv
 
 -12w = search the previous 12 weeks from now;
-hg19_dnanexus.csv = output file name
+hg19\_dnanexus.csv = output file name
 
 ## Part of Ansible Playbook
 
