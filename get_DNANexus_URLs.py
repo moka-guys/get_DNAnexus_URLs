@@ -41,16 +41,13 @@ def create_BAM_df(BAM_Data):
     for object in BAM_Data:
         file_name = object.get("describe").get("name")
         folder = object.get("describe").get("folder")
-        pattern = re.compile(r"(Pan\d+)")
-        pan_number = pattern.search(file_name)
-        pan_num = pan_number.group()
         BAI_name = file_name + ".bai"
         object_id = object.get("describe").get("id")
         project_id = object.get("describe").get("project")
-        merged_data = [file_name, BAI_name, folder, pan_num, project_id, object_id]
+        merged_data = [file_name, BAI_name, folder, project_id, object_id]
         data.append(merged_data)
     return pd.DataFrame(
-        data, columns=["name","bai_name", "folder", "pan_num", "project_id", "bam_file_id"]
+        data, columns=["name","bai_name", "folder", "project_id", "bam_file_id"]
     )
 
 # generate a dataframe containing the names of Index files including unique object ids and project id
@@ -109,7 +106,7 @@ def final_url_links(merged_df):
         sys.stdout.flush()
     sys.stdout.write("]\n")
 
-    merged_df = merged_df.drop(["prev_project_id", "bai_name"], axis=1)
+    merged_df = merged_df.drop(["prev_project_id", "bai_name", "project_id", "bam_file_id", "index_file_id"], axis=1)
     return merged_df.sort_values(["name", "folder"])
 
 
