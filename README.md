@@ -17,15 +17,20 @@ The URL links are active for 23 hours.
 
 Run this script in python 3. 
 
-python script_name length output_name
+python script\_name length output\_name
 
 ### Example:
 
-python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
+python3 path/get\_DNANexus\_URLs.py -12w path/hg19z_dnanexus.csv
 
--12w = 12 weeks from now
+-12w = search the previous 12 weeks from now
 hg19_dnanexus.csv = output file name
 
+## Part of Ansible Playbook
+
+This script can be deployed on the Genapp server using the following ansible playbook:
+
+igvwebapp.yml located at https://github.com/moka-guys/deployment/tree/develop/playbooks
 
 ## Author
 Igor Malashchuk, 

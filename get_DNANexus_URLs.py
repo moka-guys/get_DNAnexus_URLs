@@ -1,5 +1,3 @@
-import os
-import subprocess
 import dxpy
 import pandas as pd
 from DNAnexus_auth_token import token
@@ -23,7 +21,6 @@ def download_url(file_ID, project_ID):
     )
     return download_link[0]
 
-
 # find data based on the name of the file
 def find_data(filename, length):
     data = list(
@@ -33,12 +30,10 @@ def find_data(filename, length):
     )
     return data
 
-
 # find project name using unique project id
 def find_project_name(project_id):
     project_data = dxpy.bindings.dxproject.DXProject(dxid=project_id)
     return project_data.describe().get("name")
-
 
 # This function generates a dataframe containing the modified names of BAM files (in Index format) including unique object ids and project id
 def create_BAM_df(BAM_Data):
@@ -46,14 +41,9 @@ def create_BAM_df(BAM_Data):
     for object in BAM_Data:
         file_name = object.get("describe").get("name")
         folder = object.get("describe").get("folder")
-        pattern = re.compile(r"(Pan\d+_\w\d+)")
+        pattern = re.compile(r"(Pan\d+)")
         pan_number = pattern.search(file_name)
-        try:
-            pan_num = pan_number.group()
-        except:
-            pattern = re.compile(r"(Pan\d+)")
-            pan_number = pattern.search(file_name)
-            pan_num = pan_number.group()
+        pan_num = pan_number.group()
         BAI_name = file_name + ".bai"
         object_id = object.get("describe").get("id")
         project_id = object.get("describe").get("project")
@@ -62,7 +52,6 @@ def create_BAM_df(BAM_Data):
     return pd.DataFrame(
         data, columns=["name", "folder", "pan_num", "project_id", "bam_file_id"]
     )
-
 
 # generate a dataframe containing the names of Index files including unique object ids and project id
 def create_BAI_df(Index_Data):
@@ -77,42 +66,38 @@ def create_BAI_df(Index_Data):
     return pd.DataFrame(data, columns=["name", "folder", "project_id", "index_file_id"])
 
 
-# This function produces a dataframe with the URLs for BAM and Index files and
+# This function produces a dataframe with the URLs for BAM and BAM Index files
 def final_url_links(merged_df):
+    merged_df = merged_df.sort_values("project_id")
+
+    # create new columns with url links and project name
+    merged_df["project_name"] = ""
+    merged_df["url"] = ""
+    merged_df["indexURL"] = ""
     
+    # show progress of the loop
     toolbar_width = len(merged_df)
     sys.stdout.write("[%s]" % (" " * toolbar_width))
     sys.stdout.flush()
     sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
     sys.stdout.flush()
 
-    merged_df = merged_df.sort_values("project_id")
-    # create new columns with url links and project name
-    merged_df["project_name"] = ""
-    merged_df["url"] = ""
-    merged_df["indexURL"] = ""
-    # fill first row with required data
-    bam_id = merged_df["bam_file_id"][0]
-    index_id = merged_df["index_file_id"][0]
-    project_id = merged_df["project_id"][0]
-    bai_name = merged_df["name"][0]
     pattern = re.compile(r"(\S+.bam)")
-    pattern_search = pattern.search(bai_name)
-    bam_name = pattern_search.group()
-    merged_df["project_name"][0] = find_project_name(project_id)
-    merged_df["url"][0] = download_url(bam_id, project_id) + "/" + bam_name
-    merged_df["indexURL"][0] = download_url(index_id, project_id) + "/" + bai_name
-    # loop to fill the rest of the rows with the required data
-    sys.stdout.write("{} ".format(1))
-    sys.stdout.flush()
-    for i in range(1, len(merged_df)):
+
+    # Copy and shift project_ID column to enable comparsion
+    merged_df["prev_project_id"] = merged_df["project_id"].shift(1)
+
+    # Generate URL links for each BAM and BAM index file in the df
+    for i in range(0, len(merged_df)):
         bai_name = merged_df["name"][i]
+       
         pattern_search = pattern.search(bai_name)
         bam_name = pattern_search.group()
         project_id = merged_df["project_id"][i]
-        prev_project_id = merged_df["project_id"][i - 1]
+        prev_project_id = merged_df["prev_project_id"][i]
         bam_id = merged_df["bam_file_id"][i]
         index_id = merged_df["index_file_id"][i]
+        # this if statement reduces the numer of requests made by the dxpy to find project names
         if project_id == prev_project_id:
             merged_df["project_name"][i] = merged_df["project_name"][i - 1]
         else:
@@ -123,6 +108,8 @@ def final_url_links(merged_df):
         sys.stdout.write("{} ".format(i+1))
         sys.stdout.flush()
     sys.stdout.write("]\n")
+
+    merged_df = merged_df.drop(["prev_project_id"], axis=1)
     return merged_df.sort_values(["name", "folder"])
 
 
@@ -147,7 +134,7 @@ if __name__=="__main__":
     
     if len(merged) > 0:
         # generate the url links and project name
-        print("{} for {} BAM and BAM Index files:".format("Generating URL links", len(merged)))
+        print("Generating URL links for {} BAM and BAM Index files:".format(len(merged)))
         url_links = final_url_links(merged)
         url_links.to_csv(sys.argv[2], index=False, sep=",")
         print("csv file with URL links created successfully")
