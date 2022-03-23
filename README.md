@@ -1,6 +1,4 @@
 # get_DNAnexus_URLs
-
-
 Clinical Scietists reported that they could not view the mappped files in the IGV browser easily. 
 
 Therefore, get\_DNAnexus\_URLs was created to speed up the process
@@ -31,6 +29,10 @@ hg19\_dnanexus.csv = output file name
 This script can be deployed on the Genapp server using the following ansible playbook:
 
 igvwebapp.yml located at https://github.com/moka-guys/deployment/tree/develop/playbooks
+
+## Contributions
+Always use the git flow pattern when making contributions!
+The `main` branch is reserved for code-reviewed production(-ready) code
 
 ## Author
 Igor Malashchuk, 
