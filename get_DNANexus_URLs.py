@@ -47,10 +47,10 @@ def create_BAM_df(BAM_Data):
         BAI_name = file_name + ".bai"
         object_id = object.get("describe").get("id")
         project_id = object.get("describe").get("project")
-        merged_data = [BAI_name, folder, pan_num, project_id, object_id]
+        merged_data = [file_name, BAI_name, folder, pan_num, project_id, object_id]
         data.append(merged_data)
     return pd.DataFrame(
-        data, columns=["name", "folder", "pan_num", "project_id", "bam_file_id"]
+        data, columns=["name","bai_name", "folder", "pan_num", "project_id", "bam_file_id"]
     )
 
 # generate a dataframe containing the names of Index files including unique object ids and project id
@@ -63,7 +63,7 @@ def create_BAI_df(Index_Data):
         project_id = object.get("describe").get("project")
         merged_data = [file_name, folder, project_id, object_id]
         data.append(merged_data)
-    return pd.DataFrame(data, columns=["name", "folder", "project_id", "index_file_id"])
+    return pd.DataFrame(data, columns=["bai_name", "folder", "project_id", "index_file_id"])
 
 
 # This function produces a dataframe with the URLs for BAM and BAM Index files
@@ -89,8 +89,7 @@ def final_url_links(merged_df):
 
     # Generate URL links for each BAM and BAM index file in the df
     for i in range(0, len(merged_df)):
-        bai_name = merged_df["name"][i]
-       
+        bai_name = merged_df["bai_name"][i]
         pattern_search = pattern.search(bai_name)
         bam_name = pattern_search.group()
         project_id = merged_df["project_id"][i]
@@ -105,11 +104,12 @@ def final_url_links(merged_df):
         merged_df["url"][i] = download_url(bam_id, project_id) + "/" + bam_name
         merged_df["indexURL"][i] = download_url(index_id, project_id) + "/" + bai_name
         #Show progress bar
+
         sys.stdout.write("{} ".format(i+1))
         sys.stdout.flush()
     sys.stdout.write("]\n")
 
-    merged_df = merged_df.drop(["prev_project_id"], axis=1)
+    merged_df = merged_df.drop(["prev_project_id", "bai_name"], axis=1)
     return merged_df.sort_values(["name", "folder"])
 
 
@@ -130,7 +130,7 @@ if __name__=="__main__":
     
     # merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
     print("Merging BAM and BAM Index files...")
-    merged = pd.merge(all_BAM_df, all_BAI_df, on=["name", "folder", "project_id"])
+    merged = pd.merge(all_BAM_df, all_BAI_df, on=["bai_name", "folder", "project_id"])
     
     if len(merged) > 0:
         # generate the url links and project name
