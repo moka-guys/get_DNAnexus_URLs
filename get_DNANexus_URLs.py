@@ -1,11 +1,10 @@
 import dxpy
 import pandas as pd
 from DNAnexus_auth_token import token
-import re
 import sys
 
 '''
-Running this script: 
+Running this script example: 
 python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
 '''
 
@@ -65,48 +64,38 @@ def create_BAI_df(Index_Data):
 
 # This function produces a dataframe with the URLs for BAM and BAM Index files
 def final_url_links(merged_df):
-    merged_df = merged_df.sort_values("project_id")
-
+    #Find project names
+    uniqueProjects = merged_df["project_id"].unique()
+    project_dict = {}
+    for project in range(0, len(uniqueProjects)):
+        proj_id = uniqueProjects[project]
+        proj_name = find_project_name(proj_id)
+        project_dict[proj_id] = { 'name' : proj_name}
     # create new columns with url links and project name
     merged_df["project_name"] = ""
     merged_df["url"] = ""
     merged_df["indexURL"] = ""
-    
     # show progress of the loop
     toolbar_width = len(merged_df)
     sys.stdout.write("[%s]" % (" " * toolbar_width))
     sys.stdout.flush()
     sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
     sys.stdout.flush()
-
-    pattern = re.compile(r"(\S+.bam)")
-
-    # Copy and shift project_ID column to enable comparsion
-    merged_df["prev_project_id"] = merged_df["project_id"].shift(1)
-
     # Generate URL links for each BAM and BAM index file in the df
     for i in range(0, len(merged_df)):
         bai_name = merged_df["bai_name"][i]
-        pattern_search = pattern.search(bai_name)
-        bam_name = pattern_search.group()
+        bam_name = merged_df["name"][i]
         project_id = merged_df["project_id"][i]
-        prev_project_id = merged_df["prev_project_id"][i]
         bam_id = merged_df["bam_file_id"][i]
         index_id = merged_df["index_file_id"][i]
-        # this if statement reduces the numer of requests made by the dxpy to find project names
-        if project_id == prev_project_id:
-            merged_df["project_name"][i] = merged_df["project_name"][i - 1]
-        else:
-            merged_df["project_name"][i] = find_project_name(project_id)
+        merged_df["project_name"][i] = project_dict[project_id]['name']
         merged_df["url"][i] = download_url(bam_id, project_id) + "/" + bam_name
         merged_df["indexURL"][i] = download_url(index_id, project_id) + "/" + bai_name
         #Show progress bar
-
         sys.stdout.write("{} ".format(i+1))
         sys.stdout.flush()
     sys.stdout.write("]\n")
-
-    merged_df = merged_df.drop(["prev_project_id", "bai_name", "project_id", "bam_file_id", "index_file_id"], axis=1)
+    merged_df = merged_df.drop(["bai_name", "project_id", "bam_file_id", "index_file_id"], axis=1)
     return merged_df.sort_values(["name", "folder"])
 
 
@@ -137,4 +126,3 @@ if __name__=="__main__":
         print("csv file with URL links created successfully")
     else:
         print("No matching BAM and BAM Index files were found within the time frame specified: {}".format(length))
-        
