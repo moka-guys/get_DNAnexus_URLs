@@ -14,7 +14,7 @@ dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 def download_url(file_ID, project_ID):
     dxfile = dxpy.DXFile(file_ID)
     download_link = dxfile.get_download_url(
-        duration=82800,
+        duration=86400,
         preauthenticated=True,
         project=project_ID,
     )
@@ -220,26 +220,22 @@ if __name__=="__main__":
     # merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
     print("Merging BAM and BAM Index files...")
     merged_BAM = pd.merge(all_BAM_df, all_BAI_df, on=["bai_name", "folder", "project_id"])
-    print("Generating URL links for {} BAM and BAM Index files:".format(len(merged_BAM)))
-    BAM_url_links = final_url_links(merged_BAM)
+    
 
-    print("Searching for TSO500 VCF files files...")
+    print("Searching for TSO500 VCF files...")
     all_TSO = find_data("*MergedSmallVariants.genome.vcf", length)
     all_TSO_df = create_df(all_TSO)
-    print("Generating URL links for {} TSO VCF files:".format(len(all_TSO_df)))
-    TSO_links = vcf_url_links(all_TSO_df)
+    
 
-    print("Searching for ONC VCF files files...")
+    print("Searching for ONC VCF files...")
     primer_clipped = find_data("*primerclipped.vardict.vcf", length)
     primer_clipped_df = create_df(primer_clipped)
-    print("Generating URL links for {} ONC VCF files:".format(len(primer_clipped_df)))
-    primer_clipped_links = vcf_url_links(primer_clipped_df)
    
-    print("Searching for SNP VCF files files...")
+   
+    print("Searching for SNP VCF files...")
     all_snp = find_data("*.sites_present_reheader_filtered_normalised.vcf", length)
     all_snp_df = create_df(all_snp)
-    print("Generating URL links for {} ONC VCF files:".format(len(all_snp_df)))
-    snp_links = vcf_url_links(all_snp_df)
+    
 
     # Retrieve infomration for BAM files
     print("Searching for WES vcf files...")
@@ -253,19 +249,28 @@ if __name__=="__main__":
     # merging vcf and index dataframes
     merged_wes = pd.merge(all_wes_df, all_wes_tbi_df, on=["tbi_name", "folder", "project_id"])
 
-    print("Generating URL links for {} ONC VCF files:".format(len(merged_wes)))
-    wes_url_links = final_wes_url_links(merged_wes)
+    
 
     url_list = []
-    if len(TSO_links) > 0:
+    if len(all_TSO_df) > 0:
+        print("Generating URL links for {} TSO VCF files:".format(len(all_TSO_df)))
+        TSO_links = vcf_url_links(all_TSO_df)
         url_list.append(TSO_links)
-    if len(primer_clipped_links) > 0:
+    if len(primer_clipped_df) > 0:
+        print("Generating URL links for {} ONC VCF files:".format(len(primer_clipped_df)))
+        primer_clipped_links = vcf_url_links(primer_clipped_df)
         url_list.append(primer_clipped_links)
-    if len(snp_links) > 0:
+    if len(all_snp_df) > 0:
+        print("Generating URL links for {} ONC VCF files:".format(len(all_snp_df)))
+        snp_links = vcf_url_links(all_snp_df)
         url_list.append(snp_links)
-    if len(BAM_url_links) > 0:
+    if len(merged_BAM) > 0:
+        print("Generating URL links for {} BAM and BAM Index files:".format(len(merged_BAM)))
+        BAM_url_links = final_url_links(merged_BAM)
         url_list.append(BAM_url_links)
-    if len(wes_url_links) > 0:
+    if len(merged_wes) > 0:
+        print("Generating URL links for {} ONC VCF files:".format(len(merged_wes)))
+        wes_url_links = final_wes_url_links(merged_wes)
         url_list.append(wes_url_links)
 
     url_links = pd.concat(url_list, ignore_index=True)
