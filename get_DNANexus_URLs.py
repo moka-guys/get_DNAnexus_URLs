@@ -2,6 +2,8 @@ import dxpy
 import pandas as pd
 from DNAnexus_auth_token import token
 import sys
+import math
+import json
 
 '''
 Running this script example: 
@@ -9,6 +11,30 @@ python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
 '''
 
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
+
+json_data = {
+                    "label": "DNAnexus tracks",
+                    "type": "custom-data-modal",
+                    "description": "BAM and VCF tracks from DNAnexus",
+                    "columns": [
+                        "name",
+                        "project_name",
+                        "folder"
+                    ],
+                    "columnDefs": {
+                        "name": {
+                        "title": "Sample"
+                        },
+                        "project_name": {
+                        "title": "Project"
+                        },
+                        "folder" : {
+                        "title": "Folder"
+                        }
+
+                    },
+                    "data": []
+            }
 
 # generate download link for DNAnexus object
 def download_url(file_ID, project_ID):
@@ -25,6 +51,14 @@ def find_data(filename, length):
     data = list(
         dxpy.bindings.search.find_data_objects(
             name=filename, name_mode="glob", describe=True, created_after=length
+        )
+    )
+    return data
+
+def find_data_regex(filename, length):
+    data = list(
+        dxpy.bindings.search.find_data_objects(
+            name=filename, name_mode="regexp", describe=True, created_after=length
         )
     )
     return data
@@ -242,12 +276,12 @@ if __name__=="__main__":
 
     # Retrieve infomration for BAM files
     print("Searching for WES vcf files...")
-    all_wes = find_data("*markdup_Haplotyper.vcf.gz", length)
+    all_wes = find_data_regex("^NGS\S+_Haplotyper.vcf.gz$", length)
     all_wes_df = create_vcf_gz(all_wes)
 
     # Retrieve information for index files
     print("Searching for WES VCF Index files...")
-    all_wes_tbi = find_data("*Haplotyper.vcf.gz.tbi", length)
+    all_wes_tbi = find_data_regex("^NGS\S+_Haplotyper.vcf.gz.tbi$", length)
     all_wes_tbi_df = create_tbi_df(all_wes_tbi)
     # merging vcf and index dataframes
     merged_wes = pd.merge(all_wes_df, all_wes_tbi_df, on=["tbi_name", "folder", "project_id"])
@@ -275,14 +309,31 @@ if __name__=="__main__":
         print("Generating URL links for {} ONC VCF files:".format(len(merged_wes)))
         wes_url_links = final_wes_url_links(merged_wes)
         url_list.append(wes_url_links)
-
     url_links = pd.concat(url_list, ignore_index=True)
-  
-    if url_links.empty:
-        print("No identified information was found in the time frame specified: {}".format(length))
-    else:
-        url_links.to_csv(sys.argv[2], index=False, sep=",")
-        print("csv file with URL links created successfully")
+    url_links = url_links.sort_values(["name", "folder"])
+    raw_data = []
+    for i in range(0,len(url_links.index)):
+        name = url_links['name'][i]
+        folder = url_links['folder'][i]
+        project_name = url_links['project_name'][i]
+        url = url_links['url'][i]
+        index = url_links['indexURL'][i]
+        try: 
+            if math.isnan(index):
+                value = { 'name' : name,
+                'project_name' : project_name,  
+                'folder' : folder, 
+                'url' : url, }
+        except:
+            value = { 'name' : name,
+            'project_name' : project_name,  
+            'folder' : folder, 
+            'url' : url, 
+            'indexURL' : index }
+        raw_data.append(value)
+    json_data['data'] = raw_data
+    with open(sys.argv[2], 'w') as f:
+        json.dump(json_data, f)
 
 
 '''
@@ -295,9 +346,19 @@ Search patterns for VCF files
 #primerclipped.varscan.bedfiltered.vcf
 
 -WES
-#Haplotyper.vcf.gz 
-#Haplotyper.vcf.gz.tbi
+#NGS\S+Haplotyper.vcf.gz 
+#NGS\S+Haplotyper.vcf.gz.tbi
 
 -SNP:
     #.sites_present_reheader_filtered_normalised.vcf
 '''
+
+
+
+
+
+
+
+
+
+
