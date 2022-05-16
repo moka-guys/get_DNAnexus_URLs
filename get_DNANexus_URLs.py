@@ -204,6 +204,9 @@ def vcf_url_links(merged_df):
 
 
 if __name__=="__main__":
+
+    if len(sys.argv) != 3:
+        raise RuntimeError("EXAMPLE USAGE: python get_DNAnexus_URLs.py -12w output.csv")
     
     length = sys.argv[1] # e.g. argument '-12w' = search DNAnexus for the previous 12 weeks from now
     
