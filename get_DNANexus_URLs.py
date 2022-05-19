@@ -125,8 +125,8 @@ def generate_url_links_with_index(merged_df):
     '''
     uniqueProjects = merged_df["project_id"].unique()
     project_dict = {}
-    for project in range(0, len(uniqueProjects)):
-        proj_id = uniqueProjects[project]
+    for project in uniqueProjects:
+        proj_id = project
         proj_name = find_project_name(proj_id)
         project_dict[proj_id] = {"name": proj_name}
     # create new columns with url links and project name
@@ -155,8 +155,8 @@ def generate_url_links_without_index(merged_df):
     '''
     uniqueProjects = merged_df["project_id"].unique()
     project_dict = {}
-    for project in tqdm(range(0, len(uniqueProjects))):
-        proj_id = uniqueProjects[project]
+    for project in uniqueProjects:
+        proj_id = project
         proj_name = find_project_name(proj_id)
         project_dict[proj_id] = {"name": proj_name}
     # create new columns with url links and project name
