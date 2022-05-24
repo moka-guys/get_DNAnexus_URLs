@@ -3,13 +3,15 @@ Clinical Scietists reported that they could not view the mappped files in the IG
 
 Therefore, get\_DNAnexus\_URLs was created to speed up the process
 
-This code is written to generate .csv containing URLs for index and BAM files located on DNAnexus for use in the IGV browser. 
+This code is written to generate .json containing URLs for VCF, BAM and index files located on DNAnexus for use in the IGV browser. 
 
-The code is to be run every day to refresh the .csv file with updated information. 
+Furthermore, the link to VCF files for WES, SNP, ONC, TSO500 are generated. 
+
+The code is to be run every day to refresh the .json file with updated information. 
 
 The URLs are generated for files created within the requested time frame.
 
-The URL links are active for 23 hours.
+The URL links are active for 24 hours.
 
 ## Running the script
 
@@ -19,10 +21,10 @@ python script\_name length output\_name
 
 ### Example:
 
-python3 path/get\_DNANexus\_URLs.py -12w path/hg19z_dnanexus.csv
+python3 path/get\_DNANexus\_URLs.py -12w path/hg19\_dnanexus.json
 
 -12w = search the previous 12 weeks from now;
-hg19\_dnanexus.csv = output file name
+hg19\_dnanexus.json = output file name
 
 ## Part of Ansible Playbook
 
@@ -38,4 +40,4 @@ The `main` branch is reserved for code-reviewed production(-ready) code
 Igor Malashchuk, 
 STP in Clinical Boinformatics
 Guys and St Thomas's NHS Foundation Trust
-Updated: 21st March 2022 
+Updated: 16th May 2022 
