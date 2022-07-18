@@ -236,6 +236,7 @@ if __name__ == "__main__":
     all_TSO_tbi = find_data_regex("^TSO\S+_MergedSmallVariants.genome.vcf.gz.tbi$", length)
     all_TSO_tbi_df = create_df_for_VCF(all_TSO_tbi, "Y")
      # merging vcf and index dataframes
+    print("Merging TSO500 VCF and VCF Index files...")
     merged_TSO = pd.merge(
         all_TSO_df, all_TSO_tbi_df, on=["index_name", "folder", "project_id"]
     )
@@ -263,7 +264,7 @@ if __name__ == "__main__":
     )
 
     # Retrieve infomration for MokaPipe
-    print("Searching for WES vcf files...")
+    print("Searching for MokaPipe vcf files...")
     all_mokapipe = find_data_regex("^NGS\S+.bedfiltered.vcf.gz$", length)
     all_mokapipe_df = create_df_for_BAM_VCF(all_mokapipe, "tbi")
 
@@ -309,7 +310,8 @@ if __name__ == "__main__":
 """
 Search patterns for VCF files
 -TSO
-    #MergedSmallVariants.genome.vcf
+    #MergedSmallVariants.genome.vcf.gz
+    #MergedSmallVariants.genome.vcf.gz.tbi
 
 -ONC
 #primerclipped.vardict.vcf
