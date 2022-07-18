@@ -10,7 +10,7 @@ from tqdm import tqdm
 Running this script example: 
 python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
 """
-
+version = "version 1.1.0"
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 
 json_data = {
@@ -73,12 +73,12 @@ def find_project_name(project_id):
     return project_data.describe().get("name")
 
 
-# 
+#
 def create_df_for_BAM_VCF(data_list, type_of_index):
-    '''
+    """
     This function generates a dataframe containing the modified names of BAM/VCF files
     including unique file ids and project id
-    '''
+    """
     data = []
     for object in data_list:
         file_name = object.get("describe").get("name")
@@ -97,9 +97,9 @@ def create_df_for_BAM_VCF(data_list, type_of_index):
 
 
 def create_df_for_VCF(data_list, index):
-    '''
+    """
     Generate a dataframe containing the names of Index files including unique object ids and project id
-    '''
+    """
     data = []
     for object in data_list:
         file_name = object.get("describe").get("name")
@@ -108,21 +108,19 @@ def create_df_for_VCF(data_list, index):
         project_id = object.get("describe").get("project")
         merged_data = [file_name, folder, project_id, object_id]
         data.append(merged_data)
-    if index == 'Y':
-        name = "index_name" 
+    if index == "Y":
+        name = "index_name"
         file_id = "index_file_id"
     else:
-        name = "name"  
+        name = "name"
         file_id = "file_id"
-    return pd.DataFrame(
-        data, columns=[name, "folder", "project_id", file_id]
-    )
+    return pd.DataFrame(data, columns=[name, "folder", "project_id", file_id])
 
 
 def generate_url_links_with_index(merged_df):
-    '''
+    """
     This function generates URL links for a list of BAM/VCF files with indexes
-    '''
+    """
     uniqueProjects = merged_df["project_id"].unique()
     project_dict = {}
     for project in uniqueProjects:
@@ -150,9 +148,9 @@ def generate_url_links_with_index(merged_df):
 
 
 def generate_url_links_without_index(merged_df):
-    '''
+    """
     This function generates URL links for a list of BAM/VCF files without indexes
-    '''
+    """
     uniqueProjects = merged_df["project_id"].unique()
     project_dict = {}
     for project in uniqueProjects:
@@ -172,10 +170,11 @@ def generate_url_links_without_index(merged_df):
     merged_df = merged_df.drop(["project_id", "file_id"], axis=1)
     return merged_df.sort_values(["name", "folder"])
 
+
 def generate_json_data(df):
-    '''
-    This function generates a list of dictionaries containing a list of URL links. 
-    '''
+    """
+    This function generates a list of dictionaries containing a list of URL links.
+    """
     raw_data = []
     for i in tqdm(range(0, len(df.index))):
         name = url_links["name"][i]
@@ -203,11 +202,12 @@ def generate_json_data(df):
     return raw_data
 
 
-
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
-        raise RuntimeError("EXAMPLE USAGE: python get_DNAnexus_URLs.py -12w output.json")
+        raise RuntimeError(
+            "EXAMPLE USAGE: python get_DNAnexus_URLs.py -12w output.json"
+        )
 
     length = sys.argv[
         1
@@ -216,12 +216,12 @@ if __name__ == "__main__":
     # Retrieve infomration for BAM files
     print("Searching for BAM files...")
     all_BAM = find_data("*.bam", length)
-    all_BAM_df = create_df_for_BAM_VCF(all_BAM, 'bai')
+    all_BAM_df = create_df_for_BAM_VCF(all_BAM, "bai")
 
     # Retrieve information for index files
     print("Searching for BAM Index files...")
     all_BAI = find_data("*.bam.bai", length)
-    all_BAI_df = create_df_for_VCF(all_BAI, 'Y')
+    all_BAI_df = create_df_for_VCF(all_BAI, "Y")
 
     # merged two dataframes by matching modified bam file name with index filen name as well as folder and project id
     print("Merging BAM and BAM Index files...")
@@ -230,36 +230,53 @@ if __name__ == "__main__":
     )
 
     print("Searching for TSO500 VCF files...")
-    all_TSO = find_data("*MergedSmallVariants.genome.vcf", length)
-    all_TSO_df = create_df_for_VCF(all_TSO, 'N')
+    all_TSO = find_data_regex("^TSO\S+_MergedSmallVariants.genome.vcf.gz$", length)
+    all_TSO_df = create_df_for_BAM_VCF(all_TSO, "tbi")
+    print("Searching for TSO500 VCF Index files...")
+    all_TSO_tbi = find_data_regex("^TSO\S+_MergedSmallVariants.genome.vcf.gz.tbi$", length)
+    all_TSO_tbi_df = create_df_for_VCF(all_TSO_tbi, "Y")
+     # merging vcf and index dataframes
+    print("Merging TSO500 VCF and VCF Index files...")
+    merged_TSO = pd.merge(
+        all_TSO_df, all_TSO_tbi_df, on=["index_name", "folder", "project_id"]
+    )
 
     print("Searching for ONC VCF files...")
     primer_clipped = find_data("*primerclipped.vardict.vcf", length)
-    primer_clipped_df = create_df_for_VCF(primer_clipped, 'N')
+    primer_clipped_df = create_df_for_VCF(primer_clipped, "N")
 
     print("Searching for SNP VCF files...")
     all_snp = find_data("*.sites_present_reheader_filtered_normalised.vcf", length)
-    all_snp_df = create_df_for_VCF(all_snp, 'N')
+    all_snp_df = create_df_for_VCF(all_snp, "N")
 
     # Retrieve infomration for BAM files
     print("Searching for WES vcf files...")
     all_wes = find_data_regex("^NGS\S+_Haplotyper.vcf.gz$", length)
-    all_wes_df = create_df_for_BAM_VCF(all_wes, 'tbi')
+    all_wes_df = create_df_for_BAM_VCF(all_wes, "tbi")
 
     # Retrieve information for index files
     print("Searching for WES VCF Index files...")
     all_wes_tbi = find_data_regex("^NGS\S+_Haplotyper.vcf.gz.tbi$", length)
-    all_wes_tbi_df = create_df_for_VCF(all_wes_tbi, 'Y')
+    all_wes_tbi_df = create_df_for_VCF(all_wes_tbi, "Y")
     # merging vcf and index dataframes
     merged_wes = pd.merge(
         all_wes_df, all_wes_tbi_df, on=["index_name", "folder", "project_id"]
     )
 
+    # Retrieve infomration for MokaPipe
+    print("Searching for MokaPipe vcf files...")
+    all_mokapipe = find_data_regex("^NGS\S+.bedfiltered.vcf.gz$", length)
+    all_mokapipe_df = create_df_for_BAM_VCF(all_mokapipe, "tbi")
+
     url_list = []
-    if len(all_TSO_df) > 0:
-        print("Generating URL links for {} TSO VCF files:".format(len(all_TSO_df)))
-        TSO_links = generate_url_links_without_index(all_TSO_df)
+    if len(merged_TSO) > 0:
+        print("Generating URL links for {} TSO VCF files:".format(len(merged_TSO)))
+        TSO_links = generate_url_links_with_index(merged_TSO)
         url_list.append(TSO_links)
+    if len(all_mokapipe_df) > 0:
+        print("Generating URL links for {} MokaPipe VCF files:".format(len(all_mokapipe_df)))
+        mokapipe_links = generate_url_links_without_index(all_mokapipe_df)
+        url_list.append(mokapipe_links)
     if len(primer_clipped_df) > 0:
         print(
             "Generating URL links for {} ONC VCF files:".format(len(primer_clipped_df))
@@ -284,7 +301,7 @@ if __name__ == "__main__":
         url_list.append(wes_url_links)
     url_links = pd.concat(url_list, ignore_index=True)
     url_links = url_links.sort_values(["name", "folder"])
-   
+
     json_data["data"] = generate_json_data(url_links)
     with open(sys.argv[2], "w") as f:
         json.dump(json_data, f)
@@ -293,7 +310,8 @@ if __name__ == "__main__":
 """
 Search patterns for VCF files
 -TSO
-    #MergedSmallVariants.genome.vcf
+    #MergedSmallVariants.genome.vcf.gz
+    #MergedSmallVariants.genome.vcf.gz.tbi
 
 -ONC
 #primerclipped.vardict.vcf
@@ -305,4 +323,7 @@ Search patterns for VCF files
 
 -SNP:
     #.sites_present_reheader_filtered_normalised.vcf
+
+-MokaPipe
+ bedfiltered.vcf.gz
 """
