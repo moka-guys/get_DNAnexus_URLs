@@ -10,7 +10,7 @@ from tqdm import tqdm
 Running this script example: 
 python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
 """
-
+version = "version 1.1.0"
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 
 json_data = {
