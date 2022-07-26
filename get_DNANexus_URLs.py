@@ -10,7 +10,7 @@ from tqdm import tqdm
 Running this script example: 
 python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
 """
-version = "version 1.1.0"
+version = "version 1.2.0"
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 
 json_data = {
@@ -176,6 +176,7 @@ def generate_json_data(df):
     This function generates a list of dictionaries containing a list of URL links.
     """
     raw_data = []
+    print('Generating a list of dictionaries for each BAM/VCF file with name, project_name, folder and urls (including index file if exists)')
     for i in tqdm(range(0, len(df.index))):
         name = url_links["name"][i]
         folder = url_links["folder"][i]
@@ -242,8 +243,10 @@ if __name__ == "__main__":
     )
 
     print("Searching for ONC VCF files...")
-    primer_clipped = find_data("*primerclipped.vardict.vcf", length)
-    primer_clipped_df = create_df_for_VCF(primer_clipped, "N")
+    pc_vardict = find_data("*.refined.primerclipped.vardict.vcf", length)
+    pc_vardict_df = create_df_for_VCF(pc_vardict, "N")
+    pc_varscan = find_data("*.refined.primerclipped.varscan.bedfiltered.vcf", length)
+    pc_varscan_df = create_df_for_VCF(pc_varscan, "N")
 
     print("Searching for SNP VCF files...")
     all_snp = find_data("*.sites_present_reheader_filtered_normalised.vcf", length)
@@ -277,12 +280,18 @@ if __name__ == "__main__":
         print("Generating URL links for {} MokaPipe VCF files:".format(len(all_mokapipe_df)))
         mokapipe_links = generate_url_links_without_index(all_mokapipe_df)
         url_list.append(mokapipe_links)
-    if len(primer_clipped_df) > 0:
+    if len(pc_vardict_df) > 0:
         print(
-            "Generating URL links for {} ONC VCF files:".format(len(primer_clipped_df))
+            "Generating URL links for {} ONC vardict VCF files:".format(len(pc_vardict_df))
         )
-        primer_clipped_links = generate_url_links_without_index(primer_clipped_df)
-        url_list.append(primer_clipped_links)
+        pc_vardict_links = generate_url_links_without_index(pc_vardict_df)
+        url_list.append(pc_vardict_links)
+    if len(pc_varscan_df) > 0:
+        print(
+            "Generating URL links for {} ONC varscan VCF files:".format(len(pc_varscan_df))
+        )
+        pc_varscan_links = generate_url_links_without_index(pc_varscan_df)
+        url_list.append(pc_varscan_links)
     if len(all_snp_df) > 0:
         print("Generating URL links for {} SNP VCF files:".format(len(all_snp_df)))
         snp_links = generate_url_links_without_index(all_snp_df)
@@ -296,16 +305,17 @@ if __name__ == "__main__":
         BAM_url_links = generate_url_links_with_index(merged_BAM)
         url_list.append(BAM_url_links)
     if len(merged_wes) > 0:
-        print("Generating URL links for {} ONC VCF files:".format(len(merged_wes)))
+        print("Generating URL links for {} WES VCF files:".format(len(merged_wes)))
         wes_url_links = generate_url_links_with_index(merged_wes)
         url_list.append(wes_url_links)
     url_links = pd.concat(url_list, ignore_index=True)
     url_links = url_links.sort_values(["name", "folder"])
 
     json_data["data"] = generate_json_data(url_links)
+
     with open(sys.argv[2], "w") as f:
         json.dump(json_data, f)
-
+    print("get_DNAnexus_URLs.py {} script created JSON file: {}".format(version, sys.argv[2]))
 
 """
 Search patterns for VCF files
