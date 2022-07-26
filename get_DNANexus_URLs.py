@@ -176,7 +176,7 @@ def generate_json_data(df):
     This function generates a list of dictionaries containing a list of URL links.
     """
     raw_data = []
-    print('Generating a dictionary:')
+    print('Generating a list of dictionaries for each BAM/VCF file with name, project_name, folder and urls (including index file if exists)')
     for i in tqdm(range(0, len(df.index))):
         name = url_links["name"][i]
         folder = url_links["folder"][i]
