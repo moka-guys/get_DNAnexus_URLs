@@ -10,7 +10,7 @@ from tqdm import tqdm
 Running this script example: 
 python path/get_DNANexus_URLs.py -12w path/hg19_dnanexus.csv
 """
-version = "version 1.1.0"
+version = "version 1.2.0"
 dxpy.set_security_context({"auth_token_type": "Bearer", "auth_token": token})
 
 json_data = {
@@ -315,7 +315,7 @@ if __name__ == "__main__":
 
     with open(sys.argv[2], "w") as f:
         json.dump(json_data, f)
-    print("JSON file created: {}".format(sys.argv[2]))
+    print("get_DNAnexus_URLs.py {} script created JSON file: {}".format(version, sys.argv[2]))
 
 """
 Search patterns for VCF files
